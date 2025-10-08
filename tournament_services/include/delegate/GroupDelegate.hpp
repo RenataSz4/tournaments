@@ -67,18 +67,26 @@ inline std::expected<void, std::string> GroupDelegate::RemoveGroup(const std::st
 }
 
 std::expected<void, std::string> GroupDelegate::UpdateTeams(const std::string_view& tournamentId, const std::string_view& groupId, const std::vector<domain::Team>& teams) {
+    // validar que el grupo existe
     const auto group = groupRepository->FindByTournamentIdAndGroupId(tournamentId, groupId);
     if (group == nullptr) {
         return std::unexpected("Group doesn't exist");
     }
-    if (group->Teams().size() + teams.size() >= 16) {
-        return std::unexpected("Group at max capacity");
+
+    // validar capacidad: Mundial = max 4 equipos por grupo
+    const int MAX_TEAMS_WORLD_CUP = 4;
+    if (group->Teams().size() + teams.size() > MAX_TEAMS_WORLD_CUP) {
+        return std::unexpected("World Cup group at max capacity (4 teams maximum)");
     }
+
+    // validar que equipos no esten ya en otro grupo
     for (const auto& team : teams) {
         if (const auto groupTeams = groupRepository->FindByTournamentIdAndTeamId(tournamentId, team.Id)) {
             return std::unexpected(std::format("Team {} already exist", team.Id));
         }
     }
+
+    // agregar equipos al grupo
     for (const auto& team : teams) {
         const auto persistedTeam = teamRepository->ReadById(team.Id);
         if (persistedTeam == nullptr) {
@@ -86,6 +94,7 @@ std::expected<void, std::string> GroupDelegate::UpdateTeams(const std::string_vi
         }
         groupRepository->UpdateGroupAddTeam(groupId, persistedTeam);
     }
+
     return {};
 }
 

@@ -9,6 +9,6 @@ namespace domain {
     public:
         Match(/* args */){}
     };
-    
+
 }
 #endif
