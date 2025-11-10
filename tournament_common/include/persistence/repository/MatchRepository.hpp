@@ -4,41 +4,54 @@
 
 #ifndef TOURNAMENTS_MATCHREPOSITORY_HPP
 #define TOURNAMENTS_MATCHREPOSITORY_HPP
+
+#include <pqxx/pqxx>
 #include "IMatchRepository.hpp"
 #include "persistence/configuration/IDbConnectionProvider.hpp"
-#include "persistence/configuration/PostgresConnection.hpp"
 
-
-class MatchRepository: public IMatchRepository {
+class MatchRepository : public IMatchRepository {
     std::shared_ptr<IDbConnectionProvider> connectionProvider;
+
+    // Helper methods
+    std::shared_ptr<domain::Match> MapRowToMatch(const pqxx::row& row);
+    static std::string MatchStatusToString(domain::MatchStatus status);
+    static domain::MatchStatus StringToMatchStatus(const std::string& status);
+
 public:
-    explicit MatchRepository(const std::shared_ptr<IDbConnectionProvider>& connectionProvider) : connectionProvider(connectionProvider) {}
+    explicit MatchRepository(const std::shared_ptr<IDbConnectionProvider>& connectionProvider);
 
-    std::shared_ptr<domain::Match> ReadById(std::string id) override {
-        return  nullptr;
-    }
-    std::string Create (const domain::Match & entity) override {
-        return  "";
-    }
+    // IRepository methods
+    std::shared_ptr<domain::Match> ReadById(std::string id) override;
+    std::string Create(const domain::Match& entity) override;
+    std::string Update(const domain::Match& entity) override;
+    void Delete(std::string id) override;
+    std::vector<std::shared_ptr<domain::Match>> ReadAll() override;
 
-    std::string Update (const domain::Match & entity) override {
-        return "";
-    }
-    void Delete(std::string id) override {
+    // IMatchRepository methods
+    std::vector<std::shared_ptr<domain::Match>> FindByTournamentId(
+        const std::string_view& tournamentId,
+        const std::optional<std::string>& statusFilter = std::nullopt
+    ) override;
 
-    }
+    std::shared_ptr<domain::Match> FindByTournamentIdAndMatchId(
+        const std::string_view& tournamentId,
+        const std::string_view& matchId
+    ) override;
 
-    std::vector<std::shared_ptr<domain::Match>> ReadAll() override {
-        return std::vector<std::shared_ptr<domain::Match>>();
-    }
+    void UpdateScore(
+        const std::string_view& matchId,
+        int homeScore,
+        int visitorScore
+    ) override;
 
-    std::shared_ptr<domain::Match> FindLastOpenMatch(const std::string_view& tournamentId) override {
-        return  nullptr;
-    }
+    void UpdateWinner(
+        const std::string_view& matchId,
+        const std::string_view& winnerId
+    ) override;
 
-    std::vector<domain::Match> FindMatchesByTournamentAndRound(const std::string_view& tournamentId) override {
-        return std::vector<domain::Match>();
-    }
+    // Legacy methods
+    std::shared_ptr<domain::Match> FindLastOpenMatch(const std::string_view& tournamentId) override;
+    std::vector<domain::Match> FindMatchesByTournamentAndRound(const std::string_view& tournamentId) override;
 };
 
 #endif //TOURNAMENTS_MATCHREPOSITORY_HPP

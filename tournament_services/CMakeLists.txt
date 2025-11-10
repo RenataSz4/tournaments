@@ -4,10 +4,12 @@ set(CMAKE_CXX_STANDARD 23)
 set(SERVICES_SOURCES
         src/delegate/TeamDelegate.cpp
         src/delegate/TournamentDelegate.cpp
+        src/delegate/GroupDelegate.cpp
+        src/delegate/MatchDelegate.cpp
         src/controller/TournamentController.cpp
         src/controller/TeamController.cpp
         src/controller/GroupController.cpp
-        src/delegate/GroupDelegate.cpp
+        src/controller/MatchController.cpp
 )
 
 include(CTest)

@@ -16,8 +16,12 @@
 #include "persistence/repository/TeamRepository.hpp"
 #include "persistence/configuration/PostgresConnectionProvider.hpp"
 #include "persistence/repository/TournamentRepository.hpp"
+#include "persistence/repository/GroupRepository.hpp"
+#include "persistence/repository/IGroupRepository.hpp"
 #include "cms/GroupAddTeamListener.hpp"
+#include "cms/MatchScoreListener.hpp"
 #include "delegate/MatchDelegate.hpp"
+#include "delegate/PlayoffDelegate.hpp"
 #include "persistence/repository/IMatchRepository.hpp"
 #include "persistence/repository/MatchRepository.hpp"
 
@@ -39,12 +43,15 @@ namespace config {
             .singleInstance();
 
         builder.registerType<GroupAddTeamListener>();
+        builder.registerType<MatchScoreListener>();
 
         builder.registerType<TeamRepository>().as<IRepository<domain::Team, std::string_view>>().singleInstance();
-        builder.registerType<TournamentRepository>().as<IRepository<domain::Tournament, std::string>>().singleInstance();
+        builder.registerType<TournamentRepository>().singleInstance();
+        builder.registerType<GroupRepository>().singleInstance();
         builder.registerType<MatchRepository>().as<IMatchRepository>().singleInstance();
 
         builder.registerType<MatchDelegate>().singleInstance();
+        builder.registerType<PlayoffDelegate>().singleInstance();
 
         return builder.build();
     }

@@ -51,6 +51,51 @@ public:
                                    )
                 where id = $1
             )");
+
+            // Match prepared statements
+            connectionPool.back()->prepare("select_match_by_id", "SELECT * FROM matches WHERE id = $1");
+            connectionPool.back()->prepare("insert_match", R"(
+                INSERT INTO matches (tournament_id, home_team_id, visitor_team_id, round, match_status, document)
+                VALUES ($1, $2, $3, $4::match_round, $5::match_status, $6)
+                RETURNING id
+            )");
+            connectionPool.back()->prepare("update_match", R"(
+                UPDATE matches SET document = $2, last_update_date = CURRENT_TIMESTAMP
+                WHERE id = $1
+                RETURNING id
+            )");
+            connectionPool.back()->prepare("delete_match", "DELETE FROM matches WHERE id = $1");
+            connectionPool.back()->prepare("select_matches_by_tournament", R"(
+                SELECT m.*, ht.document->>'name' as home_team_name, vt.document->>'name' as visitor_team_name
+                FROM matches m
+                LEFT JOIN teams ht ON m.home_team_id = ht.id
+                LEFT JOIN teams vt ON m.visitor_team_id = vt.id
+                WHERE m.tournament_id = $1
+            )");
+            connectionPool.back()->prepare("select_matches_by_tournament_and_status", R"(
+                SELECT m.*, ht.document->>'name' as home_team_name, vt.document->>'name' as visitor_team_name
+                FROM matches m
+                LEFT JOIN teams ht ON m.home_team_id = ht.id
+                LEFT JOIN teams vt ON m.visitor_team_id = vt.id
+                WHERE m.tournament_id = $1 AND m.match_status = $2::match_status
+            )");
+            connectionPool.back()->prepare("select_match_by_tournament_and_match_id", R"(
+                SELECT m.*, ht.document->>'name' as home_team_name, vt.document->>'name' as visitor_team_name
+                FROM matches m
+                LEFT JOIN teams ht ON m.home_team_id = ht.id
+                LEFT JOIN teams vt ON m.visitor_team_id = vt.id
+                WHERE m.tournament_id = $1 AND m.id = $2
+            )");
+            connectionPool.back()->prepare("update_match_score", R"(
+                UPDATE matches
+                SET home_score = $2, visitor_score = $3, match_status = 'played'::match_status, last_update_date = CURRENT_TIMESTAMP
+                WHERE id = $1
+            )");
+            connectionPool.back()->prepare("update_match_winner", R"(
+                UPDATE matches
+                SET winner_team_id = $2, last_update_date = CURRENT_TIMESTAMP
+                WHERE id = $1
+            )");
         }
     }
 

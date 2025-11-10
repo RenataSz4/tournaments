@@ -1,0 +1,8 @@
+/tournaments/build-tests/CMakeFiles/group_controller_test_runner.dir
+/tournaments/build-tests/CMakeFiles/team_controller_test_runner.dir
+/tournaments/build-tests/CMakeFiles/tournament_controller_test_runner.dir
+/tournaments/build-tests/CMakeFiles/group_delegate_test_runner.dir
+/tournaments/build-tests/CMakeFiles/team_delegate_test_runner.dir
+/tournaments/build-tests/CMakeFiles/tournament_delegate_test_runner.dir
+/tournaments/build-tests/CMakeFiles/edit_cache.dir
+/tournaments/build-tests/CMakeFiles/rebuild_cache.dir

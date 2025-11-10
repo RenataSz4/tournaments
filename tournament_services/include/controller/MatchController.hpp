@@ -1,5 +1,23 @@
-#ifndef B37FEB69_6E3C_4DA6_BBCA_1BD46BF5F632
-#define B37FEB69_6E3C_4DA6_BBCA_1BD46BF5F632
+#ifndef MATCH_CONTROLLER_HPP
+#define MATCH_CONTROLLER_HPP
 
+#include <string>
+#include <memory>
+#include <crow.h>
+#include <nlohmann/json.hpp>
 
-#endif /* B37FEB69_6E3C_4DA6_BBCA_1BD46BF5F632 */
+#include "delegate/IMatchDelegate.hpp"
+
+class MatchController {
+    std::shared_ptr<IMatchDelegate> matchDelegate;
+
+public:
+    explicit MatchController(const std::shared_ptr<IMatchDelegate>& matchDelegate);
+    ~MatchController() = default;
+
+    crow::response GetMatches(const crow::request& request, const std::string& tournamentId);
+    crow::response GetMatch(const std::string& tournamentId, const std::string& matchId);
+    crow::response UpdateMatchScore(const crow::request& request, const std::string& tournamentId, const std::string& matchId);
+};
+
+#endif /* MATCH_CONTROLLER_HPP */

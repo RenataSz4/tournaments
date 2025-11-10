@@ -59,3 +59,38 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO tournament_svc;
 GRANT DELETE ON ALL TABLES IN SCHEMA public TO tournament_svc;
 GRANT UPDATE ON ALL TABLES IN SCHEMA public TO tournament_svc;
 GRANT INSERT ON ALL TABLES IN SCHEMA public TO tournament_svc;
+
+-- Enhancements to MATCHES table
+-- Create ENUM types for match rounds and status
+CREATE TYPE match_round AS ENUM ('regular', 'quarterfinals', 'semifinals', 'final');
+CREATE TYPE match_status AS ENUM ('pending', 'played');
+
+-- Add columns to existing MATCHES table
+ALTER TABLE MATCHES ADD COLUMN tournament_id UUID NOT NULL REFERENCES TOURNAMENTS(id);
+ALTER TABLE MATCHES ADD COLUMN home_team_id UUID NOT NULL REFERENCES TEAMS(id);
+ALTER TABLE MATCHES ADD COLUMN visitor_team_id UUID NOT NULL REFERENCES TEAMS(id);
+ALTER TABLE MATCHES ADD COLUMN home_score INTEGER;
+ALTER TABLE MATCHES ADD COLUMN visitor_score INTEGER;
+ALTER TABLE MATCHES ADD COLUMN round match_round NOT NULL DEFAULT 'regular';
+ALTER TABLE MATCHES ADD COLUMN winner_team_id UUID REFERENCES TEAMS(id);
+ALTER TABLE MATCHES ADD COLUMN match_status match_status NOT NULL DEFAULT 'pending';
+
+-- Add constraints to ensure data integrity
+ALTER TABLE MATCHES ADD CONSTRAINT matches_different_teams_check
+    CHECK (home_team_id <> visitor_team_id);
+
+ALTER TABLE MATCHES ADD CONSTRAINT matches_winner_is_participant_check
+    CHECK (winner_team_id IS NULL OR winner_team_id IN (home_team_id, visitor_team_id));
+
+ALTER TABLE MATCHES ADD CONSTRAINT matches_scores_consistency_check
+    CHECK (
+        (home_score IS NULL AND visitor_score IS NULL) OR
+        (home_score IS NOT NULL AND visitor_score IS NOT NULL)
+    );
+
+-- Add indexes for common queries
+CREATE INDEX matches_tournament_id_idx ON MATCHES(tournament_id);
+CREATE INDEX matches_home_team_id_idx ON MATCHES(home_team_id);
+CREATE INDEX matches_visitor_team_id_idx ON MATCHES(visitor_team_id);
+CREATE INDEX matches_status_idx ON MATCHES(match_status);
+CREATE INDEX matches_round_idx ON MATCHES(round);

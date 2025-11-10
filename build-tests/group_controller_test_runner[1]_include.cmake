@@ -1,0 +1,5 @@
+if(EXISTS "/tournaments/build-tests/group_controller_test_runner[1]_tests.cmake")
+  include("/tournaments/build-tests/group_controller_test_runner[1]_tests.cmake")
+else()
+  add_test(group_controller_test_runner_NOT_BUILT group_controller_test_runner_NOT_BUILT)
+endif()

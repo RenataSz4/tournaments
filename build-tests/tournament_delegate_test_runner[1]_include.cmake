@@ -1,0 +1,5 @@
+if(EXISTS "/tournaments/build-tests/tournament_delegate_test_runner[1]_tests.cmake")
+  include("/tournaments/build-tests/tournament_delegate_test_runner[1]_tests.cmake")
+else()
+  add_test(tournament_delegate_test_runner_NOT_BUILT tournament_delegate_test_runner_NOT_BUILT)
+endif()
