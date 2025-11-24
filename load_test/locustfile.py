@@ -65,11 +65,10 @@ class UsuarioTorneo(HttpUser):
                 response.failure(f"Tournament creation failed: {response.status_code}")
                 return None
 
-    def crear_grupos(self, torneo_id: str, cantidad: int):
-        # crear n grupos en un torneo y retornar sus ids
+    def crear_grupos_con_equipos(self, torneo_id: str, grupos_data: list[dict]):
+        # crear grupos con sus equipos incluidos en el torneo
         grupo_ids = []
-        for i in range(cantidad):
-            grupo_data = {"name": f"Group {chr(65 + i)}"}
+        for grupo_data in grupos_data:
             with self.client.post(
                 f"/tournaments/{torneo_id}/groups",
                 json=grupo_data,
@@ -86,18 +85,6 @@ class UsuarioTorneo(HttpUser):
                 else:
                     response.failure(f"Group creation failed: {response.status_code}")
         return grupo_ids
-
-    def agregar_equipos_a_grupo(self, torneo_id: str, grupo_id: str, equipo_ids: list[str]):
-        # agregar equipos a un grupo especifico
-        payload = [{"id": equipo_id} for equipo_id in equipo_ids]
-        with self.client.post(
-            f"/tournaments/{torneo_id}/groups/{grupo_id}/teams",
-            json=payload,
-            catch_response=True,
-            name="POST /tournaments/{id}/groups/{id}/teams"
-        ) as response:
-            if response.status_code not in (200, 201, 204):
-                response.failure(f"Add teams to group failed: {response.status_code}")
 
     def obtener_partidos_pendientes(self, torneo_id: str):
         # obtener todos los partidos pendientes de un torneo
@@ -184,16 +171,20 @@ class UsuarioTorneo(HttpUser):
         if not torneo_id:
             return
 
-        # crear grupos
-        grupos = self.crear_grupos(torneo_id, MUNDIAL_GRUPOS)
-        if len(grupos) != MUNDIAL_GRUPOS:
-            return
-
-        # distribuir equipos a grupos (4 equipos por grupo)
-        for i, grupo_id in enumerate(grupos):
+        # crear grupos con equipos incluidos
+        grupos_data = []
+        for i in range(MUNDIAL_GRUPOS):
             inicio = i * EQUIPOS_POR_GRUPO
             fin = inicio + EQUIPOS_POR_GRUPO
-            self.agregar_equipos_a_grupo(torneo_id, grupo_id, equipos[inicio:fin])
+            grupo_equipos = [{"id": equipo_id} for equipo_id in equipos[inicio:fin]]
+            grupos_data.append({
+                "name": f"Group {uuid.uuid4()}",
+                "teams": grupo_equipos
+            })
+
+        grupos = self.crear_grupos_con_equipos(torneo_id, grupos_data)
+        if len(grupos) != MUNDIAL_GRUPOS:
+            return
 
         # simular fase de grupos (partidos regular - empates permitidos)
         self.simular_ronda(torneo_id, "regular", permitir_empates=True)
@@ -212,7 +203,7 @@ class UsuarioTorneo(HttpUser):
         self.simular_ronda(torneo_id, "final", permitir_empates=False)
 
 
-class UsuarioLecturaPesada(HttpUser):
+class UsuarioLectura(HttpUser):
     # user class enfocado en operaciones de lectura para testear
     # la distribucion del load balancer a traves de multiples nodos haproxy
 
@@ -358,12 +349,13 @@ class UsuarioEscritura(HttpUser):
 
     @task(6)
     def crear_grupo(self):
-        # crear un nuevo grupo en un torneo
+        # crear un nuevo grupo en un torneo (sin equipos para testing simple)
         if not self.torneo_ids:
             return
 
         torneo_id = random.choice(self.torneo_ids)
-        grupo_data = {"name": f"Group {chr(65 + random.randint(0, 7))}"}
+        # crear grupo vacio o con equipos random existentes
+        grupo_data = {"name": f"Group {uuid.uuid4()}", "teams": []}
 
         with self.client.post(
             f"/tournaments/{torneo_id}/groups",
